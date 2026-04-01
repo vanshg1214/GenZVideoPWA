@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { InstallBanner } from './components/InstallBanner';
 import { IOSInstructions } from './components/IOSInstructions';
+import { VideoIntro } from './components/VideoIntro';
 import { Download, ArrowRight } from 'lucide-react';
 import './index.css';
 
@@ -9,7 +10,9 @@ function App() {
   const { deferredPrompt, isAppInstalled, isIOS, installApp } = usePWAInstall();
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [playingIntro, setPlayingIntro] = useState(false);
   const targetUrl = 'https://www.vcb.services';
+  const videoSrc = '/icons/0305(2)_compressed.mp4'; // Updated to use the requested video file
 
   const handleRedirect = useCallback(() => {
     if (isRedirecting) return;
@@ -30,17 +33,20 @@ function App() {
         contactInfo.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      // Fallback: If no install prompt is available, just redirect to site
-      handleRedirect();
+      // Fallback: If no install prompt is available, play intro then redirect
+      setPlayingIntro(true);
     }
   };
 
   useEffect(() => {
-    // If the app is already installed, or opened in standalone mode, redirect automatically
+    // If the app is already installed, or opened in standalone mode, play intro then redirect
     if (isAppInstalled) {
-      setTimeout(handleRedirect, 0);
+      const timer = setTimeout(() => {
+        setPlayingIntro(true);
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [isAppInstalled, handleRedirect]);
+  }, [isAppInstalled]);
 
   useEffect(() => {
     // Show install banner if prompt is available, and hasn't been dismissed in this session
@@ -59,6 +65,10 @@ function App() {
 
   return (
     <>
+      {playingIntro && (
+        <VideoIntro src={videoSrc} onFinish={handleRedirect} />
+      )}
+
       <div className={`loader-wrapper ${isRedirecting ? 'active' : ''}`}>
         <div className="spinner"></div>
       </div>
