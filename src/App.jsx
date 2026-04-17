@@ -33,6 +33,7 @@ function App() {
       
       if (outcome === 'accepted') {
         console.log('Installation accepted. Playing download video...');
+        localStorage.setItem('pwa-installed', 'true');
         setHasJustInstalled(true);
         setCurrentVideo('/icons/download_video_optimized.mp4');
         setPlayingIntro(true);
@@ -59,6 +60,7 @@ function App() {
 
     if (isStandalone) {
       console.log('Standalone mode detected. Setting intro video...');
+      localStorage.setItem('pwa-installed', 'true');
       setCurrentVideo('/icons/pollito_compressed.mp4');
       setPlayingIntro(true);
       
@@ -71,6 +73,8 @@ function App() {
       return () => clearTimeout(fallbackTimer);
     }
   }, [handleRedirect]); // Run on mount
+
+  const isActuallyInstalled = localStorage.getItem('pwa-installed') === 'true' || isAppInstalled;
 
   useEffect(() => {
     if (deferredPrompt && !sessionStorage.getItem('bannerDismissed')) {
@@ -103,14 +107,25 @@ function App() {
         
         <h1 className="title delay-2">POLLITO CHICKEN FINGERS</h1>
         <p className="subtitle delay-3">
-          Access instantly from your home screen for a seamless, fast experience.
+          {isActuallyInstalled 
+            ? "Your app is ready. Open it from your home screen for the best experience."
+            : "Access instantly from your home screen for a seamless, fast experience."}
         </p>
 
         <div className="button-group delay-3">
-          <button className="btn btn-primary" onClick={handleInstallAction}>
-            <Download size={20} />
-            Download App
-          </button>
+          {isActuallyInstalled ? (
+            <div className="installed-badge">
+              <button className="btn btn-primary" style={{ backgroundColor: '#059669', cursor: 'default' }}>
+                <Download size={20} />
+                App Downloaded
+              </button>
+            </div>
+          ) : (
+            <button className="btn btn-primary" onClick={handleInstallAction}>
+              <Download size={20} />
+              Download App
+            </button>
+          )}
         </div>
 
         {isIOS && !isAppInstalled && <IOSInstructions />}
