@@ -34,7 +34,7 @@ function App() {
       if (outcome === 'accepted') {
         console.log('Installation accepted. Playing download video...');
         setHasJustInstalled(true);
-        setCurrentVideo('/icons/download_video.mp4');
+        setCurrentVideo('/icons/download_video_optimized.mp4');
         setPlayingIntro(true);
       }
       setShowInstallBanner(false);
