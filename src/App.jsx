@@ -59,20 +59,28 @@ function App() {
     console.log('Mount check - isStandalone:', isStandalone);
 
     if (isStandalone) {
-      console.log('Standalone mode detected. Setting intro video...');
+      console.log('Standalone mode detected. Checking session status...');
       localStorage.setItem('pwa-installed', 'true');
-      setCurrentVideo('/icons/pollito_compressed.mp4');
-      setPlayingIntro(true);
       
-      // Fallback: If for some reason the video doesn't end or show, redirect after a safe timeout
-      const fallbackTimer = setTimeout(() => {
-        console.log('Fallback redirect triggered after timeout');
+      const hasPlayedThisSession = sessionStorage.getItem('intro-played') === 'true';
+      
+      if (!hasPlayedThisSession) {
+        console.log('Playing intro video for this session...');
+        setCurrentVideo('/icons/pollito_compressed.mp4');
+        setPlayingIntro(true);
+        sessionStorage.setItem('intro-played', 'true');
+      } else {
+        console.log('Intro already played this session. Skipping to redirect...');
         handleRedirect();
-      }, 15000); // 15 seconds max for intro
+      }
+      
+      const fallbackTimer = setTimeout(() => {
+        handleRedirect();
+      }, 15000);
       
       return () => clearTimeout(fallbackTimer);
     }
-  }, [handleRedirect]); // Run on mount
+  }, [handleRedirect]);
 
   const isActuallyInstalled = localStorage.getItem('pwa-installed') === 'true' || isAppInstalled;
 
