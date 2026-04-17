@@ -3,7 +3,7 @@ import { usePWAInstall } from './hooks/usePWAInstall';
 import { InstallBanner } from './components/InstallBanner';
 import { IOSInstructions } from './components/IOSInstructions';
 import { VideoIntro } from './components/VideoIntro';
-import { Download, ArrowRight } from 'lucide-react';
+import { Download, ArrowRight, CheckCircle } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -130,8 +130,8 @@ function App() {
         <div className="button-group delay-3">
           {isActuallyInstalled ? (
             <div className="installed-badge">
-              <button className="btn btn-primary" style={{ backgroundColor: '#059669', cursor: 'default' }}>
-                <Download size={20} />
+              <button className="btn btn-primary" onClick={handleRedirect} style={{ backgroundColor: '#059669' }}>
+                <CheckCircle size={20} />
                 App Downloaded
               </button>
             </div>
