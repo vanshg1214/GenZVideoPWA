@@ -11,7 +11,8 @@ function App() {
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [playingIntro, setPlayingIntro] = useState(false);
-  const [currentVideo, setCurrentVideo] = useState('/icons/pollito_compressed.mp4');
+  const [currentVideo, setCurrentVideo] = useState('');
+  const [hasJustInstalled, setHasJustInstalled] = useState(false);
   const targetUrl = 'https://www.vcb.services';
 
   const handleRedirect = useCallback(() => {
@@ -32,7 +33,7 @@ function App() {
       
       if (outcome === 'accepted') {
         console.log('Installation accepted. Playing download video...');
-        // Play the specific "Download Started" video
+        setHasJustInstalled(true); // Prevent the "Icon Click" video from firing immediately
         setCurrentVideo('/icons/download_video.mp4');
         setPlayingIntro(true);
       }
@@ -46,23 +47,22 @@ function App() {
       }
     } else {
       console.log('No install prompt available. Redirecting...');
-      // Fallback: If no install prompt is available, just redirect
       handleRedirect();
     }
   };
 
   useEffect(() => {
-    // If the app is opened from the icon (isAppInstalled/standalone mode)
-    // Play the "Icon Click" video
-    if (isAppInstalled) {
-      console.log('App detected as installed/standalone. Playing icon click video...');
-      const timer = setTimeout(() => {
-        setCurrentVideo('/icons/pollito_compressed.mp4');
-        setPlayingIntro(true);
-      }, 0);
-      return () => clearTimeout(timer);
+    // Detect if the app is opened in standalone mode (from the icon)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    
+    // If we're in standalone mode AND we didn't just install it 
+    // (This ensures when they click the icon LATER, they see pollito_compressed)
+    if (isStandalone && !hasJustInstalled) {
+      console.log('App opened from icon. Playing intro video...');
+      setCurrentVideo('/icons/pollito_compressed.mp4');
+      setPlayingIntro(true);
     }
-  }, [isAppInstalled]);
+  }, [isAppInstalled, hasJustInstalled]);
 
   useEffect(() => {
     // Show install banner if prompt is available, and hasn't been dismissed in this session
@@ -81,7 +81,7 @@ function App() {
 
   return (
     <>
-      {playingIntro && (
+      {playingIntro && currentVideo && (
         <VideoIntro src={currentVideo} onFinish={handleRedirect} />
       )}
 
