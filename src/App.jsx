@@ -34,7 +34,7 @@ function App() {
       
       if (outcome === 'accepted') {
         console.log('Installation accepted. Playing download video...');
-        localStorage.setItem('pwa-installed', 'true');
+        try { localStorage.setItem('pwa-installed', 'true'); } catch(e) {}
         setHasJustInstalled(true);
         setCurrentVideo('/icons/download_video_optimized.mp4');
         setPlayingIntro(true);
@@ -50,28 +50,36 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    // Check for standalone mode immediately on mount
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        window.navigator.standalone || 
-                        document.referrer.includes('android-app://') ||
-                        window.location.search.includes('source=pwa');
+  let isActuallyInstalled = false;
+  try {
+    isActuallyInstalled = localStorage.getItem('pwa-installed') === 'true' || isAppInstalled;
+  } catch (e) {
+    isActuallyInstalled = isAppInstalled;
+  }
 
-    console.log('Mount check - isStandalone:', isStandalone);
+  useEffect(() => {
+    // Check for standalone mode immediately on mount with safety
+    let isStandalone = false;
+    try {
+      isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                     window.navigator.standalone || 
+                     (document.referrer && document.referrer.includes('android-app://')) ||
+                     new URLSearchParams(window.location.search).get('source') === 'pwa';
+    } catch (e) {
+      console.error('Detection error:', e);
+    }
 
     if (isStandalone) {
-      console.log('Standalone mode detected. Checking session status...');
-      localStorage.setItem('pwa-installed', 'true');
+      console.log('Standalone mode detected.');
+      try { localStorage.setItem('pwa-installed', 'true'); } catch(e) {}
       
       const hasPlayedThisSession = sessionStorage.getItem('intro-played') === 'true';
       
       if (!hasPlayedThisSession) {
-        console.log('Playing intro video for this session...');
         setCurrentVideo('/icons/pollito_compressed.mp4');
         setPlayingIntro(true);
         sessionStorage.setItem('intro-played', 'true');
       } else {
-        console.log('Intro already played this session. Skipping to redirect...');
         handleRedirect();
       }
       
@@ -81,9 +89,7 @@ function App() {
       
       return () => clearTimeout(fallbackTimer);
     }
-  }, [handleRedirect]);
-
-  const isActuallyInstalled = localStorage.getItem('pwa-installed') === 'true' || isAppInstalled;
+  }, [handleRedirect, isAppInstalled]);
 
   useEffect(() => {
     if (deferredPrompt && !sessionStorage.getItem('bannerDismissed')) {
